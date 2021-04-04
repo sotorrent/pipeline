@@ -11,9 +11,9 @@
 ehthumbs.db
 Thumbs.db
 
-##########################
-# Webstorm/IntelliJ IDEA #
-##########################
+##################################
+# IntelliJ IDEA/PyCharm/Webstorm #
+##################################
 .idea/
 *.iml
 
@@ -24,6 +24,7 @@ Thumbs.db
 __pycache__/
 #*.py[cod]
 *$py.class
+env/
 
 ########
 # Misc #
