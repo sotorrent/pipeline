@@ -1,17 +1,15 @@
 logging:
   log-level: DEBUG
 
-upload:
-  json-key-file: google-cloud-key.json
-  bucket: sotorrent
-
-beam:
-  runner: DataflowRunner
+google-cloud:
+  input_bucket: sotorrent_pipeline_input
   pipeline-options:
+    runner: DataflowRunner
     project: sotorrent-org
     bucket: sotorrent
-    temp_location: gs://sotorrent-org/temp
-    staging_location: gs://sotorrent-org/staging
-    output: gs://sotorrent-org/output
+    temp_location: gs://sotorrent_pipeline_temp
+    output: gs://sotorrent_pipeline_output
     region: us-central1
     job_name: so-dump-import
+  schema_dir: schema
+  key_file: google-cloud-key.json
