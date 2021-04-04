@@ -1,0 +1,5 @@
+xmltodict >= 0.12
+apache-beam[gcp] >= 2.28
+google-cloud-bigquery >= 2.13
+google-cloud-storage >= 1.37
+pyyaml >= 5.3
