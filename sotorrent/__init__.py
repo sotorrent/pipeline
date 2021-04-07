@@ -1,7 +1,5 @@
-from util.config import Config
-from util.log import initialize_logger
+from sotorrent.config import load_yaml_config
+from sotorrent.log import initialize_logger
 
-config = Config()
-
-# configure root logger for module
-initialize_logger(__name__, config.yaml['logging']['log-level'])
+# configure root logger for package
+logger = initialize_logger(__name__, load_yaml_config('config.yml')['logging']['log-level'])

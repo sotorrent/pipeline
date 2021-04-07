@@ -20,11 +20,10 @@ Thumbs.db
 ##########
 # Python #
 ##########
-# Byte-compiled / optimized / DLL files
 __pycache__/
-#*.py[cod]
 *$py.class
 env/
+*.egg-info
 
 ########
 # Misc #
