@@ -1,10 +1,12 @@
+import logging
 import os
 
 from google.cloud import storage
+from sotorrent_pipeline.util.log import initialize_logger
 
-from sotorrent import initialize_logger, load_yaml_config
 
-logger = initialize_logger(__name__, load_yaml_config('config.yml')['logging']['log-level'])
+def get_storage_client():
+    return
 
 
 def upload_xml(input_file, bucket_name, bucket_file):
@@ -17,4 +19,7 @@ def upload_xml(input_file, bucket_name, bucket_file):
 
 
 if __name__ == '__main__':
-    upload_xml('../so-dump/Posts.xml', 'sotorrent_pipeline', 'so-dump/Posts.xml')
+    logger = initialize_logger(__name__)
+    upload_xml('/Users/sebastian/git/sotorrent/pipeline/so_dump/Posts.xml', 'sotorrent_pipeline', 'so_dump/Posts.xml')
+else:
+    logger = logging.getLogger(__name__)

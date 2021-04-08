@@ -1,7 +1,44 @@
 import json
+import logging
 
 import apache_beam as beam
+import xmltodict
 from apache_beam.coders import coders
+from apache_beam.io.gcp.gcsio import GcsIO
+
+from sotorrent_pipeline.util.google_cloud import get_storage_client
+
+logger = logging.getLogger(__name__)
+
+
+class XmlToDict:
+    def __init__(self, file):
+        self.file = file  # path to XML file
+        self.dict_elements = []  # list of dicts with content of XML file
+
+    def _handle_row(self, path, _):
+        self.dict_elements.append((path[1][1]))  # this accesses the attributes of a row element in the XML dump files
+        return True
+
+    def parse_xml_into_dict(self):
+        """
+        Parse XML file into a dict
+        """
+        logger.info(f"Parsing XML file '{self.file}'...")
+
+        if str(self.file).startswith('gs://'):
+            google_cloud_io = GcsIO()
+            with google_cloud_io.open(self.file, 'r') as fp:
+                self._parse_xml_into_dict(fp)
+        else:
+            with open(self.file, 'r', encoding='utf-8') as fp:
+                self._parse_xml_into_dict(fp)
+
+        logger.info(f"Parsed '{len(self.dict_elements)}' elements.")
+        return self.dict_elements
+
+    def _parse_xml_into_dict(self, fp):
+        xmltodict.parse(fp.read(), item_depth=2, item_callback=self._handle_row)
 
 
 class JsonSink(beam.io.FileBasedSink):
@@ -42,6 +79,11 @@ class JsonSink(beam.io.FileBasedSink):
                 file_handle.write(self.coder.encode(','))
             file_handle.write(self.coder.encode('\n'))
         self.previous_row[file_handle] = value
+
+    def write_encoded_record(self, file_handle, encoded_value):
+        """Writes a single encoded record to the file handle returned by ``open()``.
+        """
+        raise NotImplementedError
 
     def close(self, file_handle):
         """

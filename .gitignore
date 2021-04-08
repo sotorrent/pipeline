@@ -30,3 +30,4 @@ env/
 ########
 *.log
 google-cloud-key.json
+output/
