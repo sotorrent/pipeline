@@ -13,6 +13,7 @@ setuptools.setup(
         'google-cloud-bigquery==1.28.0',
         'google-cloud-storage>=1.37',
         'pyyaml>=5.3',
+        'ndjson>=0.3'
     ],
     packages=setuptools.find_packages(include=['sotorrent_pipeline', 'sotorrent_pipeline.*']),
     package_data={

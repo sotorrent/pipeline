@@ -1,14 +1,35 @@
 import json
 import logging
-
 import apache_beam as beam
+import ndjson
 import xmltodict
+
 from apache_beam.coders import coders
 from apache_beam.io.gcp.gcsio import GcsIO
 
-from sotorrent_pipeline.util.google_cloud import get_storage_client
-
 logger = logging.getLogger(__name__)
+
+
+class JsonlToDict:
+    def __init__(self, file):
+        self.file = file  # path to JSONL file
+
+    def parse_into_dict(self):
+        """
+        Parse JSONL file into a list of dict elements
+        """
+        logger.info(f"Parsing JSONL file '{self.file}'...")
+
+        if str(self.file).startswith('gs://'):
+            google_cloud_io = GcsIO()
+            with google_cloud_io.open(self.file, 'r') as fp:
+                dict_elements = ndjson.load(fp)
+        else:
+            with open(self.file, 'r', encoding='utf-8') as fp:
+                dict_elements = ndjson.load(fp)
+
+        logger.info(f"Parsed '{len(dict_elements)}' elements.")
+        return dict_elements
 
 
 class XmlToDict:
@@ -20,9 +41,9 @@ class XmlToDict:
         self.dict_elements.append((path[1][1]))  # this accesses the attributes of a row element in the XML dump files
         return True
 
-    def parse_xml_into_dict(self):
+    def parse_into_dict(self):
         """
-        Parse XML file into a dict
+        Parse XML file into a list of dict elements
         """
         logger.info(f"Parsing XML file '{self.file}'...")
 
