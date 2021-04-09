@@ -2,9 +2,9 @@ import logging
 import os
 import sys
 import apache_beam as beam
+
 from apache_beam.options.pipeline_options import SetupOptions
 from sotorrent_pipeline.util.log import initialize_logger
-
 from sotorrent_pipeline.util.beam import XmlToDict, WriteToJson
 from sotorrent_pipeline.util.config import ACTIVE_PIPELINE, LOCAL_PIPELINE, GOOGLE_CLOUD_PIPELINE, \
     load_bigquery_schemas, SAVE_MAIN_SESSION

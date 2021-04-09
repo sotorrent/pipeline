@@ -4,6 +4,7 @@ import logging
 from apache_beam.options.pipeline_options import PipelineOptions
 from pkg_resources import resource_stream
 
+
 LOG_LEVEL = logging.INFO
 logger = logging.getLogger()
 
@@ -13,7 +14,7 @@ BIGQUERY_SCHEMAS = []
 def load_bigquery_schemas():
     if len(BIGQUERY_SCHEMAS) > 0:
         return
-    for table_name in GOOGLE_CLOUD_PIPELINE.get('bigquery_table_names'):
+    for table_name in GOOGLE_CLOUD_PIPELINE.get('tables'):
         schema_json = resource_stream('sotorrent_pipeline', f'bigquery_schemas/{table_name}.json').read().decode()
         logger.info(f"Reading schema file for table '{table_name}'")
         BIGQUERY_SCHEMAS.append(json.loads(schema_json))
@@ -21,17 +22,18 @@ def load_bigquery_schemas():
 
 
 LOCAL_PIPELINE = {
-    'input': '/Users/sebastian/git/sotorrent/pipeline/so_dump/Posts.xml',
-    'output': '/Users/sebastian/git/sotorrent/pipeline/output/Posts.jsonl',
+    'input_dir': '/Users/sebastian/git/sotorrent/pipeline/so_dump/',
+    'output_dir': '/Users/sebastian/git/sotorrent/pipeline/output/',
+    'tables': ['Posts'],
     'pipeline_options': PipelineOptions(
         runner='DirectRunner'
     )
 }
 
 GOOGLE_CLOUD_PIPELINE = {
-    'input': 'gs://sotorrent_pipeline/so_dump/Posts.xml',
-    'output': 'gs://sotorrent_pipeline/output/Posts.jsonl',
-    'bigquery_table_names': ['Posts'],
+    'input_dir': 'gs://sotorrent_pipeline/so_dump/',
+    'output_dir': 'gs://sotorrent_pipeline/output/',
+    'tables': ['Posts'],
     'pipeline_options': PipelineOptions(
         runner='DataflowRunner',
         project='sotorrent-org',
@@ -43,5 +45,5 @@ GOOGLE_CLOUD_PIPELINE = {
 }
 
 
-ACTIVE_PIPELINE = LOCAL_PIPELINE
+ACTIVE_PIPELINE = GOOGLE_CLOUD_PIPELINE
 SAVE_MAIN_SESSION = True
