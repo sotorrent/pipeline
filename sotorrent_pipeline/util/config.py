@@ -6,79 +6,61 @@ import os
 from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
 from pkg_resources import resource_stream
 
-
 LOG_LEVEL = logging.INFO
-logger = logging.getLogger()
-
-INPUT_PATHS = dict()
-OUTPUT_PATHS = dict()
-BIGQUERY_SCHEMAS = dict()
-
-SETUP_FILE = None
-SAVE_MAIN_SESSION = True
-
-TABLES = ['Posts']  # 'Badges', 'Tags', 'PostLinks'
-
-PIPELINE = {
-    'input_dir': 'gs://sotorrent_pipeline/so_dump/',
-    'output_dir': 'gs://sotorrent_pipeline/output/',
-    'bigquery_dataset': '2021_04_06',
-    'pipeline_options': {
-        'runner': 'DataflowRunner',
-        'project': 'sotorrent-org',
-        'region': 'us-central1',
-        'temp_location': 'gs://sotorrent_pipeline/temp/',
-        'staging_location': 'gs://sotorrent_pipeline/staging/',
-        'job_name': 'sotorrent-pipeline'
-    }
-}
+logger = logging.getLogger(__name__)
 
 
-def generate_file_paths():
-    """
-    Generate file paths for configured input and output files.
-    :return: None
-    """
-    if len(INPUT_PATHS) > 0 or len(OUTPUT_PATHS) > 0:
-        logger.info("File paths already generated.")
-        return
-    for table_name in TABLES:
-        INPUT_PATHS[table_name] = os.path.join(PIPELINE.get('input_dir'), f'{table_name}.xml')
-        OUTPUT_PATHS[table_name] = os.path.join(PIPELINE.get('output_dir'), f'{table_name}.jsonl')
-    logger.info(f"Generated {len(INPUT_PATHS)} input paths and {len(OUTPUT_PATHS)} output paths.")
+class Config:
+    def __init__(self, config_file):
+        with open(config_file, mode='r', encoding='utf-8') as fp:
+            json_config = json.loads(fp.read())
+            self.setup_file = json_config['setup_file']
+            self.save_main_session = json_config['save_main_session']
+            self.tables = json_config['tables']
+            self.pipeline = json_config['pipeline']
+            self.input_paths = dict()
+            self.output_paths = dict()
+            self.bigquery_schemas = dict()
+            self.bigquery_schemas_with_fields = dict()
 
+            self._generate_file_paths()
+            self._load_bigquery_schemas()
 
-def load_bigquery_schemas(with_fields=True):
-    """
-    Load BigQuery table schemas from JSON files.
-    Either encapsulated in an object as required by Apache Beam or not
-    (as required by the Google Cloud BigQuery package).
-    :param with_fields: configure whether the schema should be encapsulated in an object with a fields property
-    :return: None
-    """
-    if len(BIGQUERY_SCHEMAS) > 0:
-        logger.info("Schemas already loaded.")
-        return
-    for table_name in TABLES:
-        schema_json = resource_stream('sotorrent_pipeline', f'bigquery_schemas/{table_name}.json').read().decode()
-        logger.info(f"Reading schema file for table '{table_name}'")
-        if with_fields:
-            BIGQUERY_SCHEMAS[table_name] = json.loads('{"fields":' + schema_json + '}')
-        else:
-            BIGQUERY_SCHEMAS[table_name] = json.loads(schema_json)
-    logger.info(f"Read {len(BIGQUERY_SCHEMAS)} schema file(s).")
+    def _generate_file_paths(self):
+        """
+        Generate file paths for configured input and output files.
+        :return: None
+        """
+        for table_name in self.tables:
+            self.input_paths[table_name] = os.path.join(self.pipeline['input_dir'], f'{table_name}.xml')
+            self.output_paths[table_name] = os.path.join(self.pipeline['output_dir'], f'{table_name}.jsonl')
+        logger.info(f"Generated {len(self.input_paths)} input paths and {len(self.output_paths)} output paths.")
 
+    def _load_bigquery_schemas(self, with_fields=True):
+        """
+        Load BigQuery table schemas from JSON files.
+        Both encapsulated in an object as required by Apache Beam and without
+        (as required by the Google Cloud BigQuery package).
+        :return: None
+        """
+        for table_name in self.tables:
+            schema_json = resource_stream('sotorrent_pipeline',
+                                          f'bigquery_schemas/{table_name}.json').read().decode()
+            logger.info(f"Reading schema file for table '{table_name}'")
+            self.bigquery_schemas[table_name] = json.loads(schema_json)
+            self.bigquery_schemas_with_fields[table_name] = json.loads('{"fields":' + schema_json + '}')
+        logger.info(f"Read {len(self.bigquery_schemas)} schema file(s).")
 
-def get_pipeline_options(table_name):
-    """
-    Get pipeline options for active pipeline
-    :param table_name: Name of currently processed table
-    :return:
-    """
-    pipeline_options_dict = copy.deepcopy(PIPELINE.get('pipeline_options'))
-    pipeline_options_dict['job_name'] = f"{pipeline_options_dict['job_name']}-{str(table_name).lower()}"
-    pipeline_options = PipelineOptions.from_dictionary(pipeline_options_dict)
-    pipeline_options.view_as(SetupOptions).setup_file = SETUP_FILE
-    if SAVE_MAIN_SESSION:
-        pipeline_options.view_as(SetupOptions).save_main_session = True
-    return pipeline_options
+    def get_pipeline_options(self, table_name):
+        """
+        Get pipeline options for active pipeline
+        :param table_name: Name of currently processed table
+        :return:
+        """
+        pipeline_options_dict = copy.deepcopy(self.pipeline['pipeline_options'])
+        pipeline_options_dict['job_name'] = f"{pipeline_options_dict['job_name']}-{str(table_name).lower()}"
+        pipeline_options = PipelineOptions.from_dictionary(pipeline_options_dict)
+        pipeline_options.view_as(SetupOptions).setup_file = self.setup_file
+        if self.save_main_session:
+            pipeline_options.view_as(SetupOptions).save_main_session = True
+        return pipeline_options

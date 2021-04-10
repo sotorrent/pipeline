@@ -1,10 +1,12 @@
+import argparse
 import logging
 import os
 import re
 import sys
-import sotorrent_pipeline.util.config as config
 
 from google.cloud import storage, bigquery
+
+from sotorrent_pipeline.util.config import Config
 from sotorrent_pipeline.util.log import initialize_logger
 
 
@@ -16,49 +18,42 @@ def credentials_set():
     return 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ
 
 
-def upload_xml_files_to_bucket():
+def upload_xml_files_to_bucket(config):
     """
     Upload configured XML files to the configured Google Cloud bucket.
     :return: None
     """
-    for table_name in config.TABLES:
-        local_input_dir = config.LOCAL_PIPELINE.get('input_dir')
-        cloud_storage_output_dir = config.PIPELINE.get('input_dir')
+    for table_name in config.tables:
+        local_input_dir = config.pipeline['local_input_dir']
+        cloud_storage_output_dir = config.pipeline['output_dir']
         file_name = table_name + '.xml'
         bucket_name = _get_bucket_name_from_url(cloud_storage_output_dir)
         output_path = _get_output_path_from_url(cloud_storage_output_dir, file_name)
         _upload_xml_file_to_bucket(os.path.join(local_input_dir, file_name), bucket_name, output_path)
 
 
-def rename_jsonl_files_in_bucket():
+def rename_jsonl_files_in_bucket(config):
     """
     Rename JSONL files in configured Google Cloud bucket (remove numbering added due to workers/sharding).
     :return: None
     """
-    if not config.ACTIVE_PIPELINE == config.PIPELINE:
-        logger.info("Google Cloud pipeline not active, can't rename files in bucket.")
-    config.generate_file_paths()
-    cloud_storage_output_dir = config.PIPELINE.get('output_dir')
+    cloud_storage_output_dir = config.pipeline['output_dir']
     bucket_name = _get_bucket_name_from_url(cloud_storage_output_dir)
-    for table_name, output_path in config.OUTPUT_PATHS.items():
+    for table_name, output_path in config.output_paths.items():
         file_name = table_name + '-00000-of-00001.jsonl'
         output_path = _get_output_path_from_url(cloud_storage_output_dir, file_name)
         _rename_jsonl_file_in_bucket(bucket_name, output_path)
 
 
-def load_jsonl_files_into_bigquery_table():
+def load_jsonl_files_into_bigquery_table(config):
     """
     Load JSONL files in configured bucket into corresponding BigQuery tables.
     :return: None
     """
-    if not config.ACTIVE_PIPELINE == config.PIPELINE:
-        logger.info("Google Cloud pipeline not active, can't load JSONL files from bucket.")
-    config.load_bigquery_schemas(with_fields=False)
-    config.generate_file_paths()
-    for table_name, output_path in config.OUTPUT_PATHS.items():
+    for table_name, output_path in config.output_paths.items():
         input_file = output_path
-        destination_table = f"{config.PIPELINE.get('bigquery_dataset')}.{table_name}"
-        table_schema = config.BIGQUERY_SCHEMAS[table_name]
+        destination_table = f"{config.pipeline['bigquery_dataset']}.{table_name}"
+        table_schema = config.bigquery_schemas[table_name]
         _load_jsonl_file_into_bigquery_table(input_file, table_schema, destination_table)
 
 def print_job_errors(job_id):
@@ -145,8 +140,18 @@ def _json_to_schema_fields(schema_json):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--config_file',
+        dest='config_file',
+        required=True,
+        default=None,
+        help='JSON config file.')
+    args = parser.parse_args()
+
     logger = initialize_logger(__name__)
-    upload_xml_files_to_bucket()
+    config = Config(args.config_file)
+    upload_xml_files_to_bucket(config)
     #print_job_errors('beam_bq_job_LOAD_sotorrentpipeline_LOAD_STEP_213_956a3bb978fa274a99c880f1d2bfd4d8_3a1d555474bd411ba393b01a5f1c49f6')
 else:
     logger = logging.getLogger(__name__)

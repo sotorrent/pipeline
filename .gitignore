@@ -32,3 +32,4 @@ dist/
 *.log
 google-cloud-key.json
 output/
+build/
