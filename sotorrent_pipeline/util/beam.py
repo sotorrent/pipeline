@@ -1,65 +1,29 @@
 import json
 import logging
 import apache_beam as beam
-import ndjson
-import xmltodict
 
+from xml.etree import ElementTree
 from apache_beam.coders import coders
-from apache_beam.io.gcp.gcsio import GcsIO
 
 logger = logging.getLogger(__name__)
 
 
-class JsonlToDict:
-    def __init__(self, file):
-        self.file = file  # path to JSONL file
+def filter_rows(input_str):
+    """
+    Filter matching rows, i.e. strings containing <row> XML elements.
+    :param input_str: row possibly containing a <row> XML element (could also contain their root element, e.g. <post>)
+    :return:
+    """
+    return input_str.lstrip().startswith('<row')
 
-    def parse_into_dict(self):
-        """
-        Parse JSONL file into a list of dict elements
-        """
-        logger.info(f"Parsing JSONL file '{self.file}'...")
+def xml_attributes_to_dict(xml_str):
+    """
+    Parse an XML <row> element and return its attributes as dict.
+    :param xml_str: string containing XML <row> element
+    :return:
+    """
+    return ElementTree.fromstring(xml_str).attrib
 
-        if str(self.file).startswith('gs://'):
-            google_cloud_io = GcsIO()
-            with google_cloud_io.open(self.file, 'r') as fp:
-                dict_elements = ndjson.load(fp)
-        else:
-            with open(self.file, 'r', encoding='utf-8') as fp:
-                dict_elements = ndjson.load(fp)
-
-        logger.info(f"Parsed '{len(dict_elements)}' elements.")
-        return dict_elements
-
-
-class XmlToDict:
-    def __init__(self, file):
-        self.file = file  # path to XML file
-        self.dict_elements = []  # list of dicts with content of XML file
-
-    def _handle_row(self, path, _):
-        self.dict_elements.append((path[1][1]))  # this accesses the attributes of a row element in the XML dump files
-        return True
-
-    def parse_into_dict(self):
-        """
-        Parse XML file into a list of dict elements
-        """
-        logger.info(f"Parsing XML file '{self.file}'...")
-
-        if str(self.file).startswith('gs://'):
-            google_cloud_io = GcsIO()
-            with google_cloud_io.open(self.file, 'r') as fp:
-                self._parse_xml_into_dict(fp)
-        else:
-            with open(self.file, 'r', encoding='utf-8') as fp:
-                self._parse_xml_into_dict(fp)
-
-        logger.info(f"Parsed '{len(self.dict_elements)}' elements.")
-        return self.dict_elements
-
-    def _parse_xml_into_dict(self, fp):
-        xmltodict.parse(fp.read(), item_depth=2, item_callback=self._handle_row)
 
 
 class JsonSink(beam.io.FileBasedSink):
@@ -71,12 +35,13 @@ class JsonSink(beam.io.FileBasedSink):
     def __init__(self,
                  file_path_prefix,
                  file_name_suffix='.json',
-                 write_jsonl=False  # see https://jsonlines.org/
+                 write_jsonl=False,  # see https://jsonlines.org/
+                 num_shards=0
                  ):
         super().__init__(file_path_prefix,
                          coder=coders.StrUtf8Coder(),
                          file_name_suffix=file_name_suffix,
-                         mime_type='application/json',)
+                         num_shards=num_shards)
         self.write_jsonl = write_jsonl
         self.previous_row = dict()
 
@@ -121,9 +86,12 @@ class JsonSink(beam.io.FileBasedSink):
 
 
 class WriteToJson(beam.PTransform):
-    def __init__(self, file_path_prefix, file_name_suffix='.json', write_jsonl=False):
+    """
+    A PTransform writing to a JsonSink.
+    """
+    def __init__(self, file_path_prefix, file_name_suffix='.jsonl', write_jsonl=True, num_shards=0):
         super().__init__()
-        self._sink = JsonSink(file_path_prefix, file_name_suffix, write_jsonl)
+        self._sink = JsonSink(file_path_prefix, file_name_suffix, write_jsonl, num_shards)
 
     def expand(self, input_or_inputs):
         return input_or_inputs | beam.io.Write(self._sink)

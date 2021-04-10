@@ -1,0 +1,32 @@
+[
+    {
+        "name": "Id",
+        "type": "INTEGER",
+        "mode": "REQUIRED"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "UserId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Name",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Date",
+        "type": "DATETIME"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Class",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "TagBased",
+        "type": "BOOLEAN"
+    }
+]
