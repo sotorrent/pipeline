@@ -15,7 +15,7 @@ def credentials_set():
     Check
     :return:
     """
-    return 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ
+    return os.getenv('GOOGLE_APPLICATION_CREDENTIALS') is not None
 
 
 def upload_xml_files_to_bucket(config):
@@ -62,7 +62,7 @@ def print_job_errors(job_id):
     :param job_id: ID of the job.
     :return: None
     """
-    bigquery_client = bigquery.Client.from_service_account_json(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    bigquery_client = bigquery.Client.from_service_account_json(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     job = bigquery_client.get_job(job_id)
     _print_job_errors(job)
 
@@ -99,7 +99,7 @@ def _get_output_path_from_url(gs_url, file_name):
 
 def _upload_xml_file_to_bucket(input_file, bucket_name, output_file):
     logger.info(f"Uploading file '{input_file}' to bucket '{bucket_name}'...")
-    storage_client = storage.Client.from_service_account_json(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    storage_client = storage.Client.from_service_account_json(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(output_file)
     blob.upload_from_filename(input_file)
@@ -108,7 +108,7 @@ def _upload_xml_file_to_bucket(input_file, bucket_name, output_file):
 
 def _rename_jsonl_file_in_bucket(bucket_name, bucket_file):
     logger.info(f"Renaming file '{bucket_file}' in bucket '{bucket_name}'...")
-    storage_client = storage.Client.from_service_account_json(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    storage_client = storage.Client.from_service_account_json(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(bucket_file)
     new_name = re.sub('-(\\d){5}-of-(\\d){5}', '', bucket_file)  # e.g. Posts-00000-of-00001.jsonl -> Posts.jsonl
@@ -118,7 +118,7 @@ def _rename_jsonl_file_in_bucket(bucket_name, bucket_file):
 
 def _load_jsonl_file_into_bigquery_table(input_file, json_schema, destination_table):
     logger.info(f"Loading file '{input_file}' into table '{destination_table}'.")
-    bigquery_client  = bigquery.Client.from_service_account_json(os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+    bigquery_client  = bigquery.Client.from_service_account_json(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
     job_config = bigquery.LoadJobConfig()
     job_config.source_format = bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
     job_config.schema = _json_to_schema_fields(json_schema)
