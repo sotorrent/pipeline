@@ -16,6 +16,7 @@ def filter_rows(input_str):
     """
     return input_str.lstrip().startswith('<row')
 
+
 def xml_attributes_to_dict(xml_str):
     """
     Parse an XML <row> element and return its attributes as dict.
@@ -23,7 +24,6 @@ def xml_attributes_to_dict(xml_str):
     :return:
     """
     return ElementTree.fromstring(xml_str).attrib
-
 
 
 class JsonSink(beam.io.FileBasedSink):

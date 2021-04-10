@@ -14,6 +14,25 @@ INPUT_PATHS = dict()
 OUTPUT_PATHS = dict()
 BIGQUERY_SCHEMAS = dict()
 
+SETUP_FILE = None
+SAVE_MAIN_SESSION = True
+
+TABLES = ['Posts']  # 'Badges', 'Tags', 'PostLinks'
+
+PIPELINE = {
+    'input_dir': 'gs://sotorrent_pipeline/so_dump/',
+    'output_dir': 'gs://sotorrent_pipeline/output/',
+    'bigquery_dataset': '2021_04_06',
+    'pipeline_options': {
+        'runner': 'DataflowRunner',
+        'project': 'sotorrent-org',
+        'region': 'us-central1',
+        'temp_location': 'gs://sotorrent_pipeline/temp/',
+        'staging_location': 'gs://sotorrent_pipeline/staging/',
+        'job_name': 'sotorrent-pipeline'
+    }
+}
+
 
 def generate_file_paths():
     """
@@ -24,8 +43,8 @@ def generate_file_paths():
         logger.info("File paths already generated.")
         return
     for table_name in TABLES:
-        INPUT_PATHS[table_name] = os.path.join(ACTIVE_PIPELINE.get('input_dir'), f'{table_name}.xml')
-        OUTPUT_PATHS[table_name] = os.path.join(ACTIVE_PIPELINE.get('output_dir'), f'{table_name}.jsonl')
+        INPUT_PATHS[table_name] = os.path.join(PIPELINE.get('input_dir'), f'{table_name}.xml')
+        OUTPUT_PATHS[table_name] = os.path.join(PIPELINE.get('output_dir'), f'{table_name}.jsonl')
     logger.info(f"Generated {len(INPUT_PATHS)} input paths and {len(OUTPUT_PATHS)} output paths.")
 
 
@@ -54,41 +73,12 @@ def get_pipeline_options(table_name):
     """
     Get pipeline options for active pipeline
     :param table_name: Name of currently processed table
-    :param job_name:
     :return:
     """
-    pipeline_options_dict = copy.deepcopy(ACTIVE_PIPELINE.get('pipeline_options'))
-    if ACTIVE_PIPELINE == GOOGLE_CLOUD_PIPELINE:
-        pipeline_options_dict['job_name'] =  f"{pipeline_options_dict['job_name']}-{str(table_name).lower()}"
+    pipeline_options_dict = copy.deepcopy(PIPELINE.get('pipeline_options'))
+    pipeline_options_dict['job_name'] = f"{pipeline_options_dict['job_name']}-{str(table_name).lower()}"
     pipeline_options = PipelineOptions.from_dictionary(pipeline_options_dict)
+    pipeline_options.view_as(SetupOptions).setup_file = SETUP_FILE
     if SAVE_MAIN_SESSION:
         pipeline_options.view_as(SetupOptions).save_main_session = True
     return pipeline_options
-
-
-TABLES = ['Badges', 'Tags', 'PostLinks']
-
-LOCAL_PIPELINE = {
-    'input_dir': '/mnt/f/Git/sotorrent/pipeline/so_dump/',
-    'output_dir': '/mnt/f/Git/sotorrent/pipeline/output/',
-    'pipeline_options': {
-        'runner': 'DirectRunner'
-    }
-}
-
-GOOGLE_CLOUD_PIPELINE = {
-    'input_dir': 'gs://sotorrent_pipeline/so_dump/',
-    'output_dir': 'gs://sotorrent_pipeline/output/',
-    'bigquery_dataset': '2021_04_06',
-    'pipeline_options': {
-        'runner': 'DataflowRunner',
-        'project': 'sotorrent-org',
-        'region': 'us-central1',
-        'temp_location': 'gs://sotorrent_pipeline/temp/',
-        'staging_location': 'gs://sotorrent_pipeline/staging/',
-        'job_name': 'sotorrent-pipeline'
-    }
-}
-
-ACTIVE_PIPELINE = GOOGLE_CLOUD_PIPELINE
-SAVE_MAIN_SESSION = True

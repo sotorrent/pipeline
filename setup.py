@@ -17,6 +17,6 @@ setuptools.setup(
         'sotorrent_pipeline': ['bigquery_schemas/*.json']
     },
     entry_points={
-        'console_scripts': ['sotorrent-pipeline=sotorrent_pipeline.main_pipeline:main']
+        'console_scripts': ['sotorrent-pipeline=sotorrent_pipeline.pipeline:main']
     }
 )

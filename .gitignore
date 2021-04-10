@@ -24,6 +24,7 @@ __pycache__/
 *$py.class
 env/
 *.egg-info
+dist/
 
 ########
 # Misc #

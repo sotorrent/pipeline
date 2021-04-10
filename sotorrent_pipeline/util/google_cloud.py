@@ -23,7 +23,7 @@ def upload_xml_files_to_bucket():
     """
     for table_name in config.TABLES:
         local_input_dir = config.LOCAL_PIPELINE.get('input_dir')
-        cloud_storage_output_dir = config.GOOGLE_CLOUD_PIPELINE.get('input_dir')
+        cloud_storage_output_dir = config.PIPELINE.get('input_dir')
         file_name = table_name + '.xml'
         bucket_name = _get_bucket_name_from_url(cloud_storage_output_dir)
         output_path = _get_output_path_from_url(cloud_storage_output_dir, file_name)
@@ -35,10 +35,10 @@ def rename_jsonl_files_in_bucket():
     Rename JSONL files in configured Google Cloud bucket (remove numbering added due to workers/sharding).
     :return: None
     """
-    if not config.ACTIVE_PIPELINE == config.GOOGLE_CLOUD_PIPELINE:
+    if not config.ACTIVE_PIPELINE == config.PIPELINE:
         logger.info("Google Cloud pipeline not active, can't rename files in bucket.")
     config.generate_file_paths()
-    cloud_storage_output_dir = config.GOOGLE_CLOUD_PIPELINE.get('output_dir')
+    cloud_storage_output_dir = config.PIPELINE.get('output_dir')
     bucket_name = _get_bucket_name_from_url(cloud_storage_output_dir)
     for table_name, output_path in config.OUTPUT_PATHS.items():
         file_name = table_name + '-00000-of-00001.jsonl'
@@ -51,13 +51,13 @@ def load_jsonl_files_into_bigquery_table():
     Load JSONL files in configured bucket into corresponding BigQuery tables.
     :return: None
     """
-    if not config.ACTIVE_PIPELINE == config.GOOGLE_CLOUD_PIPELINE:
+    if not config.ACTIVE_PIPELINE == config.PIPELINE:
         logger.info("Google Cloud pipeline not active, can't load JSONL files from bucket.")
     config.load_bigquery_schemas(with_fields=False)
     config.generate_file_paths()
     for table_name, output_path in config.OUTPUT_PATHS.items():
         input_file = output_path
-        destination_table = f"{config.GOOGLE_CLOUD_PIPELINE.get('bigquery_dataset')}.{table_name}"
+        destination_table = f"{config.PIPELINE.get('bigquery_dataset')}.{table_name}"
         table_schema = config.BIGQUERY_SCHEMAS[table_name]
         _load_jsonl_file_into_bigquery_table(input_file, table_schema, destination_table)
 
