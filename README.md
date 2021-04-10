@@ -11,4 +11,4 @@ To run the pipeline in Google Cloud, you need to set the following environment v
 Then, install the package and run the pipeline:
 
     python3 setup.py install
-    sotorrent-pipeline  --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
+    sotorrent-pipeline --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
