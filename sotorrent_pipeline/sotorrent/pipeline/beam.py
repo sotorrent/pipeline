@@ -1,11 +1,44 @@
 import json
 import logging
+import os
+
 import apache_beam as beam
 
 from xml.etree import ElementTree
 from apache_beam.coders import coders
 
 logger = logging.getLogger(__name__)
+
+
+def run_pipeline(config):
+    """
+    Execute the SOTorrent pipeline (either locally with limited functionality or in Google Cloud).
+    :return: None
+    """
+    input_paths = config.input_paths
+    output_dir = config.pipeline['output_dir']
+
+    logger.info(f"Writing output of pipeline to '{output_dir}'")
+    for table_name, input_path in input_paths.items():
+        logger.info(f"Reading and converting XML file for table '{table_name}' from '{input_path}'...")
+        with beam.Pipeline(options=config.get_pipeline_options(table_name)) as p:
+            dict_elements = (p
+                             | "Read XML file" >> beam.io.ReadFromText(input_path)
+                             | "Ignore non-row elements" >> beam.Filter(filter_rows)
+                             | "Convert XML attributes to dict elements" >> beam.Map(xml_attributes_to_dict))
+
+            bigquery_dataset = config.pipeline['bigquery_dataset']
+            logger.info(f"Writing data into BigQuery dataset '{bigquery_dataset}'")
+            (dict_elements | "Write data into BigQuery table" >> beam.io.WriteToBigQuery(
+                f'{bigquery_dataset}.{table_name}',
+                schema=config.bigquery_schemas_with_fields[table_name],
+                write_disposition=beam.io.BigQueryDisposition.WRITE_EMPTY,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED))
+
+            file_name_without_extension = os.path.join(output_dir, table_name)
+            logger.info(f"Writing data to JSONL file '{file_name_without_extension}.jsonl'")
+            (dict_elements | "Writing data to JSONL file" >> WriteToJson(file_name_without_extension, num_shards=1))
+    logger.info(f"Pipeline finished.")
 
 
 def filter_rows(input_str):
@@ -41,7 +74,8 @@ class JsonSink(beam.io.FileBasedSink):
         super().__init__(file_path_prefix,
                          coder=coders.StrUtf8Coder(),
                          file_name_suffix=file_name_suffix,
-                         num_shards=num_shards)
+                         num_shards=num_shards,
+                         mime_type='text/plain')
         self.write_jsonl = write_jsonl
         self.previous_row = dict()
 

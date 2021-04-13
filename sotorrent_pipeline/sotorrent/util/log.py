@@ -1,6 +1,6 @@
 import logging
 
-from sotorrent_pipeline.util.config import LOG_LEVEL
+from sotorrent_pipeline.sotorrent.util.config import LOG_LEVEL
 
 
 def initialize_logger(logger_name):

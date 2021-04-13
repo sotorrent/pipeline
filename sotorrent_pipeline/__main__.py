@@ -1,4 +1,4 @@
-from sotorrent_pipeline.pipeline import main
+from sotorrent_pipeline.main import main
 
 if __name__ == '__main__':
     main()

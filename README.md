@@ -8,7 +8,18 @@ To run the pipeline in Google Cloud, you need to set the following environment v
 
     export GOOGLE_APPLICATION_CREDENTIALS="$PWD/google-cloud-key.json"
 
-Then, install the package and run the pipeline:
+First, you need to install the sotorrent_pipeline package:
 
     python3 setup.py install
-    sotorrent-pipeline --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
+
+Then, you can upload the XML files to a Google Cloud storage bucket:
+
+    sotorrent-pipeline --mode upload --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
+
+Then, install the package and run the pipeline:
+
+    sotorrent-pipeline --mode pipeline --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
+
+To inspect a failed BigQuery job, you can run:
+
+    sotorrent-pipeline --mode debug --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json" --job_id <JOB_ID>

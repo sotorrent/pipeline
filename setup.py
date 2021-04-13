@@ -5,7 +5,7 @@ setuptools.setup(
     url='https://github.com/sotorrent/pipeline',
     author='Sebastian Baltes',
     author_email='s@baltes.dev',
-    version='0.1',
+    version='0.1.1',
     license='Apache-2.0',
     install_requires=[
         'apache-beam[gcp]>=2.28',
@@ -17,6 +17,6 @@ setuptools.setup(
         'sotorrent_pipeline': ['bigquery_schemas/*.json']
     },
     entry_points={
-        'console_scripts': ['sotorrent-pipeline=sotorrent_pipeline.pipeline:main']
+        'console_scripts': ['sotorrent-pipeline=sotorrent_pipeline.main:main']
     }
 )
