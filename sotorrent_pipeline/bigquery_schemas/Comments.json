@@ -33,5 +33,10 @@
         "mode": "NULLABLE",
         "name": "UserId",
         "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "ContentLicense",
+        "type": "STRING"
     }
 ]

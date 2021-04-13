@@ -43,5 +43,10 @@
         "mode": "NULLABLE",
         "name": "Text",
         "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "ContentLicense",
+        "type": "STRING"
     }
 ]
