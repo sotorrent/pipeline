@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 def upload_xml_files_to_bucket(config):
     """
-    Upload configured XML files to the configured Google Cloud bucket.
+    Upload SO dump XML files to the configured Google Cloud bucket.
+    :param config Used to access Google Cloud credentials
     :return: None
     """
     for table_name in config.tables:
@@ -23,9 +24,39 @@ def upload_xml_files_to_bucket(config):
         _upload_file_to_bucket(config, input_path, bucket_name, output_path)
 
 
+def upload_type_table_files_to_bucket(config):
+    """
+    Upload JSONL files for type tables to the configured Google Cloud bucket.
+    :param config Used to access Google Cloud credentials
+    :return: None
+    """
+    for table_name in config.type_tables:
+        cloud_storage_output_dir = config.pipeline['output_dir']
+        file_name = table_name + '.jsonl'
+        bucket_name = _get_bucket_name_from_url(cloud_storage_output_dir)
+        output_path = _get_path_from_gs_url(cloud_storage_output_dir, file_name)
+        _upload_string_to_bucket(config, config.type_tables_jsonl[table_name], bucket_name, output_path)
+
+
+def load_type_tables_into_bigquery(config):
+    """
+    Load type table JSONL files from the Google Cloud bucket into BigQuery tables.
+    :param config Used to access Google Cloud credentials
+    :return: None
+    """
+    for table_name in config.type_tables:
+        cloud_storage_output_dir = config.pipeline['output_dir']
+        file_name = table_name + '.jsonl'
+        input_path = os.path.join(cloud_storage_output_dir, file_name)
+        schema = config.bigquery_schemas[table_name]
+        output_table = f"{config.pipeline['bigquery_dataset']}.{table_name}"
+        _load_jsonl_file_into_bigquery_table(config, input_path, schema, output_table)
+
+
 def rename_jsonl_files_in_bucket(config):
     """
     Rename JSONL files in configured Google Cloud bucket (remove numbering added due to workers/sharding).
+    :param config Used to access Google Cloud credentials
     :return: None
     """
     cloud_storage_output_dir = config.pipeline['output_dir']
@@ -36,26 +67,14 @@ def rename_jsonl_files_in_bucket(config):
         _rename_jsonl_file_in_bucket(config, bucket_name, output_path)
 
 
-def load_jsonl_files_into_bigquery_table(config):
-    """
-    Load JSONL files in configured bucket into corresponding BigQuery tables.
-    (currently not used, data is written within the pipeline)
-    :return: None
-    """
-    for table_name, output_path in config.output_paths.items():
-        input_file = output_path
-        destination_table = f"{config.pipeline['bigquery_dataset']}.{table_name}"
-        table_schema = config.bigquery_schemas[table_name]
-        _load_jsonl_file_into_bigquery_table(config, input_file, table_schema, destination_table)
-
-
 def download_jsonl_files_from_bucket(config):
     """
     Download JSONL files created by the pipeline from the configured Google Cloud bucket
     to the configured local output directory.
+    :param config used to access Google Cloud credentials
     :return: None
     """
-    for table_name in config.tables:
+    for table_name in config.tables + config.type_tables:
         cloud_storage_input_dir = config.pipeline['output_dir']
         local_output_dir = config.pipeline['local_output_dir']
         file_name = table_name + '.jsonl'
@@ -68,7 +87,7 @@ def download_jsonl_files_from_bucket(config):
 def print_job_errors(config, job_id):
     """
     Helper method to retrieve error information about BigQuery jobs.
-    :param config: Used to access Google Cloud JSON credentials
+    :param config used to access Google Cloud credentials
     :param job_id: ID of the job.
     :return: None
     """
@@ -107,6 +126,15 @@ def _get_path_from_gs_url(gs_url, file_name):
     return output_path
 
 
+def _upload_string_to_bucket(config, input_string, bucket_name, output_file):
+    logger.info(f"Uploading file '{output_file}' to bucket '{bucket_name}'...")
+    storage_client = storage.Client.from_service_account_json(config.google_credentials_json_file)
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(output_file)
+    blob.upload_from_string(input_string)
+    logger.info(f"Upload of file '{output_file}' to bucket '{bucket_name}' complete.")
+
+
 def _upload_file_to_bucket(config, input_file, bucket_name, output_file):
     logger.info(f"Uploading file '{input_file}' to bucket '{bucket_name}'...")
     storage_client = storage.Client.from_service_account_json(config.google_credentials_json_file)
@@ -135,24 +163,30 @@ def _rename_jsonl_file_in_bucket(config, bucket_name, bucket_file):
     logger.info(f"File '{bucket_file}' in bucket '{bucket_name} renamed to '{new_name}'.")
 
 
-def _load_jsonl_file_into_bigquery_table(config, input_file, json_schema, destination_table):
-    logger.info(f"Loading file '{input_file}' into table '{destination_table}'.")
-    bigquery_client  = bigquery.Client.from_service_account_json(config.google_credentials_json_file)
+def _load_jsonl_file_into_bigquery_table(config, input_file, json_schema, output_table):
+    logger.info(f"Loading file '{input_file}' into table '{output_table}'.")
+    bigquery_client = bigquery.Client.from_service_account_json(config.google_credentials_json_file)
+    job = bigquery_client.load_table_from_uri(input_file,
+                                              output_table,
+                                              job_config=_get_bigquery_job_config(json_schema))
+    if job.errors:
+        logger.info(f"Load job for file '{input_file}' into table '{output_table}' failed.")
+        _print_job_errors(job)
+    else:
+        logger.info(f"Load job for file '{input_file}' into table '{output_table}' finished.")
+
+
+def _get_bigquery_job_config(json_schema):
     job_config = bigquery.LoadJobConfig()
     job_config.source_format = bigquery.SourceFormat.NEWLINE_DELIMITED_JSON
     job_config.schema = _json_to_schema_fields(json_schema)
     job_config.write_disposition = bigquery.job.WriteDisposition.WRITE_EMPTY
     job_config.create_disposition = bigquery.job.CreateDisposition.CREATE_IF_NEEDED
-    job = bigquery_client.load_table_from_uri(input_file, destination_table, job_config=job_config)
-    if job.errors:
-        logger.info(f"Load job for file '{input_file}' into table '{destination_table}' failed.")
-        _print_job_errors(job)
-    else:
-        logger.info(f"Load job for file '{input_file}' into table '{destination_table}' finished.")
+    return job_config
 
 
-def _json_to_schema_fields(schema_json):
+def _json_to_schema_fields(json_schema):
     schema_fields = []
-    for row in schema_json:
+    for row in json_schema:
         schema_fields.append(bigquery.SchemaField(row['name'], row['type'], row['mode']))
     return schema_fields

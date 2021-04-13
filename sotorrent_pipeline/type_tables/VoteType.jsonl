@@ -1,0 +1,14 @@
+{"Id":"1","Type":"AcceptedByOriginator"}
+{"Id":"2","Type":"UpMod"}
+{"Id":"3","Type":"DownMod"}
+{"Id":"4","Type":"Offensive"}
+{"Id":"5","Type":"Favorite"}
+{"Id":"6","Type":"Close"}
+{"Id":"7","Type":"Reopen"}
+{"Id":"8","Type":"BountyStart"}
+{"Id":"9","Type":"BountyClose"}
+{"Id":"10","Type":"Deletion"}
+{"Id":"11","Type":"Undeletion"}
+{"Id":"12","Type":"Spam"}
+{"Id":"15","Type":"ModeratorReview"}
+{"Id":"16","Type":"ApproveEditSuggestion"}

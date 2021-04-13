@@ -1,12 +1,13 @@
 {
-  "setup_file": "/mnt/f/Git/sotorrent/pipeline/setup.py",
+  "setup_file": "/Users/sebastian/git/sotorrent/pipeline/setup.py",
   "save_main_session": true,
   "tables": ["Badges","Comments", "PostHistory", "PostLinks", "Posts", "Tags", "Users", "Votes"],
+  "type_tables": ["PostHistoryType", "PostType","VoteType"],
   "pipeline": {
     "input_dir": "gs://sotorrent_pipeline/so_dump/",
     "output_dir": "gs://sotorrent_pipeline/output/",
-    "local_input_dir": "/mnt/f/Git/sotorrent/pipeline/so_dump",
-    "local_output_dir": "/mnt/f/Git/sotorrent/pipeline/output",
+    "local_input_dir": "/Users/sebastian/git/sotorrent/pipeline/so_dump",
+    "local_output_dir": "/Users/sebastian/git/sotorrent/pipeline/output",
     "bigquery_dataset": "2021_04_06",
     "pipeline_options": {
       "runner": "DataflowRunner",

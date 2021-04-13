@@ -1,0 +1,31 @@
+{"Id":"1","Type":"Initial Title"}
+{"Id":"2","Type":"Initial Body"}
+{"Id":"3","Type":"Initial Tags"}
+{"Id":"4","Type":"Edit Title"}
+{"Id":"5","Type":"Edit Body"}
+{"Id":"6","Type":"Edit Tags"}
+{"Id":"7","Type":"Rollback Title"}
+{"Id":"8","Type":"Rollback Body"}
+{"Id":"9","Type":"Rollback Tags"}
+{"Id":"10","Type":"Post Closed"}
+{"Id":"11","Type":"Post Reopened"}
+{"Id":"12","Type":"Post Deleted"}
+{"Id":"13","Type":"Post Undeleted"}
+{"Id":"14","Type":"Post Locked"}
+{"Id":"15","Type":"Post Unlocked"}
+{"Id":"16","Type":"Community Owned"}
+{"Id":"17","Type":"Post Migrated"}
+{"Id":"18","Type":"Question Merged"}
+{"Id":"19","Type":"Question Protected"}
+{"Id":"20","Type":"Question Unprotected"}
+{"Id":"22","Type":"Question Unmerged"}
+{"Id":"24","Type":"Suggested Edit Applied"}
+{"Id":"25","Type":"Post Tweeted"}
+{"Id":"31","Type":"Discussion moved to chat"}
+{"Id":"33","Type":"Post Notice Added"}
+{"Id":"34","Type":"Post Notice Removed"}
+{"Id":"35","Type":"Post Migrated Away"}
+{"Id":"36","Type":"Post Migrated Here"}
+{"Id":"37","Type":"Post Merge Source"}
+{"Id":"38","Type":"Post Merge Destination"}
+{"Id":"50","Type":"CommunityBump"}

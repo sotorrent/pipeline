@@ -14,7 +14,7 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(include=['sotorrent_pipeline', 'sotorrent_pipeline.*']),
     package_data={
-        'sotorrent_pipeline': ['bigquery_schemas/*.json']
+        'sotorrent_pipeline': ['bigquery_schemas/*.json', 'type_tables/*.jsonl']
     },
     entry_points={
         'console_scripts': ['sotorrent-pipeline=sotorrent_pipeline.main:main']
