@@ -3,5 +3,5 @@ set -Eeuo pipefail
 
 echo "Compressing JSONL files..."
 for file in ./*.jsonl; do
-	bzip2 "$file" && rm "$file";
+	bzip2 "$file";
 done
