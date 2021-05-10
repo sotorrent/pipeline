@@ -3,11 +3,12 @@
   "save_main_session": true,
   "tables": ["Badges","Comments", "PostHistory", "PostLinks", "Posts", "Tags", "Users", "Votes"],
   "type_tables": ["PostHistoryType", "PostType","VoteType"],
+  "zenodo_deposit": 4697248,
   "pipeline": {
     "input_dir": "gs://sotorrent_pipeline/so_dump/",
     "output_dir": "gs://sotorrent_pipeline/output/",
     "local_input_dir": "/Users/sebastian/git/sotorrent/pipeline/so_dump",
-    "local_output_dir": "/Users/sebastian/git/sotorrent/pipeline/output",
+    "local_output_dir": "/mnt/e/Temp/",
     "bigquery_dataset": "2021_04_06",
     "pipeline_options": {
       "runner": "DataflowRunner",

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class Config:
-    def __init__(self, config_file):
+    def __init__(self, config_file, mode):
         logger.info("Initializing configuration...")
         with open(config_file, mode='r', encoding='utf-8') as fp:
             json_config = json.loads(fp.read())
@@ -21,14 +21,21 @@ class Config:
             self.tables = json_config['tables']
             self.type_tables = json_config['type_tables']
             self.pipeline = json_config['pipeline']
+            self.zenodo_deposit = json_config['zenodo_deposit']
             self.input_paths = dict()
             self.output_paths = dict()
             self.bigquery_schemas = dict()
             self.bigquery_schemas_with_fields = dict()
             self.type_tables_jsonl = dict()
             self.google_credentials_json_file = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
+            self.zenodo_access_token = os.getenv('ZENODO_TOKEN')
 
-            if self.google_credentials_json_file is None:
+            if mode == 'zenodo_upload' and self.zenodo_access_token is None:
+                error_message = "Zenodo access token is not available. Environment variable " \
+                                "ZENODO_TOKEN set?"
+                logger.error(error_message)
+                sys.exit(error_message)
+            elif mode != 'zenodo_upload' and self.google_credentials_json_file is None:
                 error_message = "Google Cloud credentials are not available. Environment variable " \
                                 "GOOGLE_APPLICATION_CREDENTIALS set?"
                 logger.error(error_message)

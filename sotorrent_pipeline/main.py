@@ -7,6 +7,7 @@ from sotorrent_pipeline.sotorrent.pipeline.google_cloud import upload_xml_files_
     rename_jsonl_files_in_bucket, download_jsonl_files_from_bucket, upload_type_table_files_to_bucket, \
     load_type_tables_into_bigquery
 from sotorrent_pipeline.sotorrent.util.log import initialize_logger
+from sotorrent_pipeline.sotorrent.util.zenodo import upload_jsonl_files_to_zenodo_bucket
 
 
 def main():
@@ -26,7 +27,7 @@ def main():
         dest='mode',
         required=True,
         default='pipeline',
-        help="Mode can either be 'pipeline', 'upload', or 'debug'.")
+        help="Mode can either be 'pipeline', 'google-upload', 'zenodo-upload', or 'debug'.")
     parser.add_argument(
         '--job_id',
         dest='job_id',
@@ -35,9 +36,9 @@ def main():
         help="Job ID for debug purposes.")
     args = parser.parse_args()
 
-    config = Config(args.config_file)
+    config = Config(args.config_file, args.mode)
 
-    if args.mode == 'upload':
+    if args.mode == 'google-upload':
         logger.info("Uploading XML files to Google Cloud storage bucket...")
         upload_xml_files_to_bucket(config)
     elif args.mode == 'pipeline':
@@ -56,6 +57,9 @@ def main():
             logger.error('Job ID needs to be set in debug mode.')
         logger.info(f"Printing errors messages for job '{args.job_id}'...")
         print_job_errors(config, args.job_id)
+    elif args.mode == 'zenodo_upload':
+        logger.info("Uploading JSONL files to Zenodo bucket...")
+        upload_jsonl_files_to_zenodo_bucket(config)
     logger.info("Done.")
 
 

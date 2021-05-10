@@ -23,3 +23,7 @@ Then, install the package and run the pipeline:
 To inspect a failed BigQuery job, you can run:
 
     sotorrent-pipeline --mode debug --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json" --job_id <JOB_ID>
+
+To upload the JSONL files to a Zenodo bucket, you need to set the following environment variable:
+
+    export ZENODO_TOKEN="..."

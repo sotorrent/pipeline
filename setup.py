@@ -10,7 +10,8 @@ setuptools.setup(
     install_requires=[
         'apache-beam[gcp]>=2.28',
         'google-cloud-bigquery==1.28.0',
-        'google-cloud-storage>=1.37'
+        'google-cloud-storage>=1.37',
+        'requests>=2.25'
     ],
     packages=setuptools.find_packages(include=['sotorrent_pipeline', 'sotorrent_pipeline.*']),
     package_data={
