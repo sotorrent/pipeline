@@ -16,7 +16,7 @@ Then, you can upload the XML files to a Google Cloud storage bucket:
 
     sotorrent-pipeline --mode upload --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
 
-Then, install the package and run the pipeline:
+Then, you can run the pipeline:
 
     sotorrent-pipeline --mode pipeline --config_file "/Users/sebastian/git/sotorrent/pipeline/config.json"
 
