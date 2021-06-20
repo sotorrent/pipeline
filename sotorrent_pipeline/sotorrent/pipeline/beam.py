@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def run_pipeline(config):
     """
-    Execute the SOTorrent pipeline (either locally with limited functionality or in Google Cloud).
+    Execute the SOTorrent pipeline in Google Cloud.
     :return: None
     """
     input_paths = config.input_paths
