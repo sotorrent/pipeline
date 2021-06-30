@@ -17,6 +17,10 @@ class Config:
         with open(config_file, mode='r', encoding='utf-8') as fp:
             json_config = json.loads(fp.read())
             self.setup_file = json_config['setup_file']
+            if not os.path.isfile(self.setup_file):
+                logger.error(f"Setup file not found: {self.setup_file}")
+                logger.error("Exiting...")
+                sys.exit(-1)
             self.save_main_session = json_config['save_main_session']
             self.tables = json_config['tables']
             self.type_tables = json_config['type_tables']
